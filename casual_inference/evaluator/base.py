@@ -4,6 +4,8 @@ import pandas as pd
 import plotly.graph_objs as go
 from typing_extensions import Self
 
+from ..model import CustomMetric
+
 
 class BaseEvaluator(ABC):
     def __init__(self) -> None:
@@ -11,7 +13,7 @@ class BaseEvaluator(ABC):
 
     @abstractmethod
     # ignore mypy error temporary, because the "Self" type support on mypy is ongoing. https://github.com/python/mypy/pull/11666
-    def evaluate(self, data: pd.DataFrame, unit_col: str, metrics: list[str]) -> Self:  # type: ignore
+    def evaluate(self, data: pd.DataFrame, unit_col: str, metrics: list[str | CustomMetric]) -> Self:  # type: ignore
         return self
 
     @abstractmethod
@@ -26,8 +28,21 @@ class BaseEvaluator(ABC):
         if self.stats.shape[0] == 0:
             raise ValueError("Evaluated statistics haven't been calculated. Please call evaluate() in advance.")
 
-    def _validate_passed_data(self, data: pd.DataFrame, unit_col: str, metrics: list[str]) -> None:
+    def _validate_passed_data(self, data: pd.DataFrame, unit_col: str, metrics: list[str | CustomMetric]) -> None:
         if data.shape[0] != data[unit_col].nunique():
             raise ValueError("passed dataframe hasn't been aggregated by the randomization unit.")
         if len(metrics) == 0:
             raise ValueError("metrics hasn't been specified.")
+
+        missing_metrics = []
+        for m in metrics:
+            if isinstance(m, CustomMetric):
+                if m.denominator not in data.columns:
+                    missing_metrics.append(m.denominator)
+                if m.numerator not in data.columns:
+                    missing_metrics.append(m.numerator)
+            else:
+                if m not in data.columns:
+                    missing_metrics.append(m)
+        if len(missing_metrics) > 0:
+            raise ValueError(f"There are missing metrics in passed dataset: {missing_metrics}")

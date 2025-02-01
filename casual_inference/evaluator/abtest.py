@@ -10,6 +10,7 @@ import plotly.graph_objs as go
 from scipy.stats import chisquare
 from typing_extensions import Self
 
+from ..model import CustomMetric
 from ..statistical_testing import eval_ttest_significance, t_test
 from .base import BaseEvaluator
 
@@ -42,7 +43,7 @@ class ABTestEvaluator(BaseEvaluator):
         self,
         data: pd.DataFrame,
         unit_col: str,
-        metrics: list[str],
+        metrics: list[str | CustomMetric],
         variant_col: str = "variant",
         segment_col: Optional[str] = None,
     ) -> Self:  # type: ignore
@@ -76,7 +77,8 @@ class ABTestEvaluator(BaseEvaluator):
         # to avoid errors in later steps
         data[variant_col] = data[variant_col].astype(int)
         for metric_col in metrics:
-            data[metric_col] = data[metric_col].astype(np.float64)
+            if not isinstance(metric_col, CustomMetric):
+                data[metric_col] = data[metric_col].astype(np.float64)
 
         if segment_col:
             segment = data[segment_col]
