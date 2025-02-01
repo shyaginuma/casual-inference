@@ -77,7 +77,8 @@ class ABTestEvaluator(BaseEvaluator):
         # to avoid errors in later steps
         data[variant_col] = data[variant_col].astype(int)
         for metric_col in metrics:
-            data[metric_col] = data[metric_col].astype(np.float64)
+            if not isinstance(metric_col, CustomMetric):
+                data[metric_col] = data[metric_col].astype(np.float64)
 
         if segment_col:
             segment = data[segment_col]
