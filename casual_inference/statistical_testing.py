@@ -33,14 +33,15 @@ def t_test(data: pd.DataFrame, unit_col: str, variant_col: str, metrics: list[st
     if data[variant_col].min() != 1:
         raise ValueError("the control variant seems not to exist.")
 
-    normal_metrics = []
-    custom_metrics = []
+    normal_metrics: list[str] = []
+    custom_metrics: list[CustomMetric] = []
     for m in metrics:
         if isinstance(m, CustomMetric):
             custom_metrics.append(m)
             continue
         normal_metrics.append(m)
 
+    # normal metrics
     means = (
         data.groupby(variant_col)[normal_metrics]
         .mean()
@@ -55,6 +56,23 @@ def t_test(data: pd.DataFrame, unit_col: str, variant_col: str, metrics: list[st
         .reset_index()
         .rename(columns={"level_1": "metric", 0: "var"})
     )
+
+    # custom metris
+    means_custom = []
+    means_var = []
+    for m in custom_metrics:
+        for variant in means[variant_col].unique():
+            denom = means.loc[(means[variant_col] == variant) & (means["metric"] == m.denominator), "mean"].values[0]
+            numer = means.loc[(means[variant_col] == variant) & (means["metric"] == m.numerator), "mean"].values[0]
+            means_custom.append(
+                {
+                    variant_col: variant,
+                    "metric": m.name,
+                    "mean": numer / denom,
+                }
+            )
+    means = pd.concat([means, pd.DataFrame(means_custom)])
+
     counts = (
         data.groupby(variant_col)[normal_metrics]
         .count()
