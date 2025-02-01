@@ -59,19 +59,34 @@ def t_test(data: pd.DataFrame, unit_col: str, variant_col: str, metrics: list[st
 
     # custom metris
     means_custom = []
-    means_var = []
+    vars_custom = []
     for m in custom_metrics:
         for variant in means[variant_col].unique():
-            denom = means.loc[(means[variant_col] == variant) & (means["metric"] == m.denominator), "mean"].values[0]
-            numer = means.loc[(means[variant_col] == variant) & (means["metric"] == m.numerator), "mean"].values[0]
+            denom_mean = means.loc[(means[variant_col] == variant) & (means["metric"] == m.denominator), "mean"].values[
+                0
+            ]
+            numer_mean = means.loc[(means[variant_col] == variant) & (means["metric"] == m.numerator), "mean"].values[0]
+            denom_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.denominator), "mean"].values[0]
+            numer_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.numerator), "mean"].values[0]
+            covar = np.cov(data[[m.denominator, m.numerator]])[0][1]
             means_custom.append(
                 {
                     variant_col: variant,
                     "metric": m.name,
-                    "mean": numer / denom,
+                    "mean": numer_mean / denom_mean,
+                }
+            )
+            vars_custom.append(
+                {
+                    variant_col: variant,
+                    "metric": m.name,
+                    "var": 1
+                    / numer_mean**2
+                    * (numer_var - 2 * numer_mean / denom_mean * covar + (numer_mean / denom_mean) ** 2 * denom_var),
                 }
             )
     means = pd.concat([means, pd.DataFrame(means_custom)])
+    vars = pd.concat([vars, pd.DataFrame(vars_custom)])
 
     counts = (
         data.groupby(variant_col)[normal_metrics]
