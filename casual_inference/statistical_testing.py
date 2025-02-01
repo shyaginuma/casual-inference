@@ -42,10 +42,18 @@ def t_test(data: pd.DataFrame, unit_col: str, variant_col: str, metrics: list[st
         normal_metrics.append(m)
 
     means = (
-        data.groupby(variant_col)[normal_metrics].mean().stack().reset_index().rename(columns={"level_1": "metric", 0: "mean"})
+        data.groupby(variant_col)[normal_metrics]
+        .mean()
+        .stack()
+        .reset_index()
+        .rename(columns={"level_1": "metric", 0: "mean"})
     )
     vars = (
-        data.groupby(variant_col)[normal_metrics].var().stack().reset_index().rename(columns={"level_1": "metric", 0: "var"})
+        data.groupby(variant_col)[normal_metrics]
+        .var()
+        .stack()
+        .reset_index()
+        .rename(columns={"level_1": "metric", 0: "var"})
     )
     counts = (
         data.groupby(variant_col)[normal_metrics]
