@@ -66,8 +66,8 @@ def t_test(data: pd.DataFrame, unit_col: str, variant_col: str, metrics: list[st
                 0
             ]
             numer_mean = means.loc[(means[variant_col] == variant) & (means["metric"] == m.numerator), "mean"].values[0]
-            denom_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.denominator), "mean"].values[0]
-            numer_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.numerator), "mean"].values[0]
+            denom_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.denominator), "var"].values[0]
+            numer_var = vars.loc[(vars[variant_col] == variant) & (vars["metric"] == m.numerator), "var"].values[0]
             covar = np.cov(data[[m.denominator, m.numerator]])[0][1]
             means_custom.append(
                 {
