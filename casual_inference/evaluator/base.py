@@ -36,7 +36,7 @@ class BaseEvaluator(ABC):
 
         missing_metrics = []
         for m in metrics:
-            if isinstance(m) == CustomMetric:
+            if isinstance(m, CustomMetric):
                 if m.denominator not in data.columns:
                     missing_metrics.append(m.denominator)
                 if m.numerator not in data.columns:
