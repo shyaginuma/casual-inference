@@ -33,3 +33,16 @@ class BaseEvaluator(ABC):
             raise ValueError("passed dataframe hasn't been aggregated by the randomization unit.")
         if len(metrics) == 0:
             raise ValueError("metrics hasn't been specified.")
+
+        missing_metrics = []
+        for m in metrics:
+            if isinstance(m) == CustomMetric:
+                if m.denominator not in data.columns:
+                    missing_metrics.append(m.denominator)
+                if m.numerator not in data.columns:
+                    missing_metrics.append(m.numerator)
+            else:
+                if m not in data.columns:
+                    missing_metrics.append(m)
+        if len(missing_metrics) > 0:
+            raise ValueError(f"There are missing metrics in passed dataset: {missing_metrics}")
